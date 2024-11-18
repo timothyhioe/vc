@@ -5,6 +5,7 @@
 #include <memory>
 #include <AssetManager.h>
 #include "Transform.h"
+#include "Cube.h"
 
 class Scene
 {
@@ -29,6 +30,7 @@ private:
 	AssetManager m_assets;
     ShaderProgram* m_shader;
     GLuint vaoID, vboID;
+    Transform cubeTrans;
 
 };
 

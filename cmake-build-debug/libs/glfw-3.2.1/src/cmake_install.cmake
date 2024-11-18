@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/LENOVO/Desktop/VC/Prak/1/VC_OpenGL_Praktikum_Framework/OpenGL_Praktikum/libs/glfw-3.2.1/src
+# Install script for directory: C:/Users/LENOVO/Desktop/VC/Prak/2/libs/glfw-3.2.1/src
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
