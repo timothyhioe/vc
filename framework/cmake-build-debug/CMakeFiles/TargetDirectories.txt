@@ -1,0 +1,3 @@
+C:/Users/LENOVO/Desktop/VC/Prak/1/VC_OpenGL_Praktikum_Framework/OpenGL_Praktikum/framework/cmake-build-debug/CMakeFiles/framework.dir
+C:/Users/LENOVO/Desktop/VC/Prak/1/VC_OpenGL_Praktikum_Framework/OpenGL_Praktikum/framework/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/LENOVO/Desktop/VC/Prak/1/VC_OpenGL_Praktikum_Framework/OpenGL_Praktikum/framework/cmake-build-debug/CMakeFiles/rebuild_cache.dir
