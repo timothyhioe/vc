@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #ifndef OPENGL_PRAKTIKUM_CUBE_H
 #define OPENGL_PRAKTIKUM_CUBE_H
 //x y z r g b
@@ -25,7 +24,6 @@ static const int cubeInd[] = {1, 2, 3,
                               4, 0, 7};
 
 #endif //OPENGL_PRAKTIKUM_CUBE_H
-=======
 //
 // Created by LENOVO on 18/11/2024.
 //
@@ -40,4 +38,3 @@ class Cube {
 
 
 #endif //OPENGL_PRAKTIKUM_CUBE_H
->>>>>>> origin/prak2
