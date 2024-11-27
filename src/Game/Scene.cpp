@@ -70,28 +70,28 @@ bool Scene::init()
         headTransform.setScale(glm::vec3(0.5f, 0.5f, 0.5f));     // head scaling
 
         // upper left arm
-        upperLeftArmTransform.setPosition(glm::vec3(-1.0f, 0.65f, -0.3f));  // upper left arm position
-        upperLeftArmTransform.setScale(glm::vec3(0.45f, 0.8f, 0.0f));     // arm scaling
+        upperLeftArmTransform.setPosition(glm::vec3(-0.7f, 0.25f, 0.2f));  // upper left arm position
+        upperLeftArmTransform.setScale(glm::vec3(0.2f, 0.4f, 0.2f));     // arm scaling
 
         // lower left arm
-        lowerLeftArmTransform.setPosition(glm::vec3(-1.0f, -0.2f, -0.3f)); // position lower left arm
-        lowerLeftArmTransform.setScale(glm::vec3(0.45f, 0.8f, 0.0f));
+        lowerLeftArmTransform.setPosition(glm::vec3(0.0f, -1.1f, 0.2f)); // position lower left arm
+        lowerLeftArmTransform.setScale(glm::vec3(0.2f, 0.5f, 0.2f));
 
         // upper right arm
-        upperRightArmTransform.setPosition(glm::vec3(0.8f, 0.55f, 0.3f));
-        upperRightArmTransform.setScale(glm::vec3(0.45f, 0.8f, 0.2f));
+        upperRightArmTransform.setPosition(glm::vec3(0.7f, 0.25f, 0.2f));
+        upperRightArmTransform.setScale(glm::vec3(0.2f, 0.4f, 0.2f));
 
         // lower right arm
-        lowerRightArmTransform.setPosition(glm::vec3(0.8f, -0.25f, 0.3f));
-        lowerRightArmTransform.setScale(glm::vec3(0.45f, 0.8f, 0.0f));
+        lowerRightArmTransform.setPosition(glm::vec3(0.0f, -1.1f, 0.2f));
+        lowerRightArmTransform.setScale(glm::vec3(0.25f, 0.4f, 0.2f));
 
         // left leg
-        leftLegTransform.setPosition(glm::vec3(-0.4f, -1.55f, 0.0f)); // position left leg
-        leftLegTransform.setScale(glm::vec3(0.45f, 1.0f, 0.2f));    // leg width and length
+        leftLegTransform.setPosition(glm::vec3(-0.3f, -0.8f, 0.0f)); // position left leg
+        leftLegTransform.setScale(glm::vec3(0.45f, 0.45f, 0.2f));    // leg width and length
 
         // right leg
-        rightLegTransform.setPosition(glm::vec3(0.4f, -1.55f, 0.0f));
-        rightLegTransform.setScale(glm::vec3(0.45f, 1.0f, 0.2f));
+        rightLegTransform.setPosition(glm::vec3(0.3f, -0.8f, 0.0f));
+        rightLegTransform.setScale(glm::vec3(0.45f, 0.45f, 0.2f));
 
 
 
@@ -154,8 +154,6 @@ void Scene::render(float dt)
     m_shader->setUniform("view", view, false);
     m_shader->setUniform("project", projection, false);
 
-    // rotation for 3d look
-    glm::mat4 rotateAroundPivot = glm::rotate(glm::mat4(1), glm::radians(50.0f), glm::vec3(0, 1, 0));
 
     //animation
     float timeValue = glfwGetTime();
@@ -163,72 +161,88 @@ void Scene::render(float dt)
     float maxAngle = 0.4f;         // maximum rotation angle
     float swingAngle = maxAngle * glm::sin(timeValue * speed); // animate between -maxAngle and +maxAngle
 
+    // rotation for 3d look
+    glm::mat4 rotateAroundPivot = glm::rotate(glm::mat4(1), glm::radians(timeValue * 20.0f), glm::vec3(0, 1, 0));
+
+
     // draw the torso
     glm::mat4 torso = torsoTransform.getMatrix() * rotateAroundPivot;
     m_shader->setUniform("model", torso , false);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);  // Draw torso
 
     // draw the head
-    glm::mat4 head = headTransform.getMatrix() * rotateAroundPivot;
+    glm::mat4 head = headTransform.getMatrix() * torso; //connect head to torso
+    head = glm::scale(head, glm::vec3(1.2, 0.5, 1.0));
     m_shader->setUniform("model", head, false);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);  // Draw head
 
     // draw upper left arm
     float armSwingAngle = maxAngle * glm::sin(timeValue * speed + glm::pi<float>()); // opposite of legs
-    glm::quat leftArmRotation = glm::angleAxis(glm::radians(armSwingAngle), glm::vec3(1, 0, 0.5));
+    glm::quat leftArmRotation = glm::angleAxis(glm::radians(armSwingAngle), glm::vec3(1, 0, 0));
+    glm::mat4 upperLeftArm = torso * upperLeftArmTransform.getMatrix(); // connect to torso
     upperLeftArmTransform.rotateAroundPoint(leftShoulder, leftArmRotation);
-    glm::mat4 upperLeftArm = upperLeftArmTransform.getMatrix();
-    upperLeftArm = upperLeftArm * rotateAroundPivot;
+    upperLeftArm = upperLeftArm * upperLeftArmTransform.getMatrix();
+    upperLeftArm = glm::scale(upperLeftArm, glm::vec3(10.0, 2.0, 3.0));
     m_shader->setUniform("model", upperLeftArm, false);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
     //draw lower left arm
-    float maxLowerAngle = 0.6f;
+    float maxLowerAngle = 0.3f;
     float delayFactor = 0.05f;
-    float initialoffset = 0.3f;
-    float lowerArmSwingAngle = maxLowerAngle * glm::sin((timeValue * speed)  - delayFactor); // faster swinging motion
-    glm::quat lowerArmRotation = glm::angleAxis(glm::radians(lowerArmSwingAngle), glm::vec3(1, 0, 0.5));
+    //    float lowerArmSwingAngle = maxLowerAngle * glm::sin((timeValue * speed)  - delayFactor);
+    float lowerArmSwingAngle = maxLowerAngle * glm::sin(timeValue * speed + glm::pi<float>() - delayFactor); // add some delay
+
+    glm::mat4 lowerLeftArm = upperLeftArm;
+    //    glm::quat lowerArmRotation = glm::angleAxis(glm::radians(lowerArmSwingAngle), glm::vec3(1, 0, 0));
+    glm::quat lowerArmRotation = glm::angleAxis(glm::radians(lowerArmSwingAngle), glm::vec3(1, 0, 0.0));
     lowerLeftArmTransform.rotateAroundPoint(leftElbow, lowerArmRotation); // connect to the upper arm swinging animation
-    glm::mat4 lowerLeftArm = lowerLeftArmTransform.getMatrix();
-    lowerLeftArm = lowerLeftArm * rotateAroundPivot;
+    lowerLeftArm = lowerLeftArm * lowerLeftArmTransform.getMatrix();
+    lowerLeftArm = glm::scale(lowerLeftArm, glm::vec3(5.0, 2.0, 5.0));
     m_shader->setUniform("model", lowerLeftArm, false);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
     // draw upper right arm
-    float rightArmSwing = maxAngle * glm::sin(timeValue * speed);
-    glm::quat rightArmRotation = glm::angleAxis(glm::radians(rightArmSwing), glm::vec3(1, 0, 0.5));
+    float rightArmSwing = maxAngle * glm::sin((timeValue * speed) - delayFactor);
+    glm::quat rightArmRotation = glm::angleAxis(glm::radians(rightArmSwing), glm::vec3(1, 0, 0));
+    glm::mat4 upperRightArm = torso * upperRightArmTransform.getMatrix();
     upperRightArmTransform.rotateAroundPoint(rightShoulder, rightArmRotation);
-    glm::mat4 upperRightArm = upperRightArmTransform.getMatrix();
-    upperRightArm = upperRightArm * rotateAroundPivot;
+    upperRightArm = upperRightArm * upperRightArmTransform.getMatrix();
+    upperRightArm = glm::scale(upperRightArm, glm::vec3(10.0, 2.0, 3.0));
     m_shader->setUniform("model", upperRightArm, false);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);  // Draw upper right arm
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
     //draw lower right arm
-    float lowerRightSwing = maxLowerAngle * glm::sin(timeValue * speed + glm::pi<float>() - delayFactor);
-    glm::quat lowerRightArmRotation = glm::angleAxis(glm::radians(lowerRightSwing), glm::vec3(1, 0, 0.5));
+
+    //    float lowerRightSwing = maxLowerAngle * glm::sin(timeValue * speed + glm::pi<float>() - delayFactor);
+    float lowerRightSwing = maxLowerAngle * glm::sin((timeValue * speed)  - delayFactor);
+    glm::mat4 lowerRightArm = upperRightArm;
+    //    glm::quat lowerRightArmRotation = glm::angleAxis(glm::radians(lowerRightSwing), glm::vec3(1, 0, 0.0));
+    glm::quat lowerRightArmRotation = glm::angleAxis(glm::radians(lowerRightSwing), glm::vec3(1, 0, 0));
     lowerRightArmTransform.rotateAroundPoint(rightElbow, lowerRightArmRotation);
-    glm::mat4 lowerRightArm = lowerRightArmTransform.getMatrix();
-    lowerRightArm = lowerRightArm * rotateAroundPivot;
+    lowerRightArm = lowerRightArm * lowerRightArmTransform.getMatrix();
+    lowerRightArm = glm::scale(lowerRightArm, glm::vec3(5.0, 2.0, 5.0));
     m_shader->setUniform("model", lowerRightArm, false);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);  // Draw lower right arm
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
 
     // Draw the left leg
-    glm::quat legRotation = glm::angleAxis(glm::radians(swingAngle), glm::vec3(1, 0, 0.5));
+    glm::mat4 leftLeg = torso; // attatch leg to torso
+    glm::quat legRotation = glm::angleAxis(glm::radians(swingAngle), glm::vec3(1, 0, 0));
     leftLegTransform.rotateAroundPoint(leftHip, legRotation);
-    glm::mat4 leftLeg = leftLegTransform.getMatrix();
-    leftLeg = leftLeg * rotateAroundPivot;
+    leftLeg = leftLeg * leftLegTransform.getMatrix(); // Recalculate the final transformation
+    leftLeg = glm::scale(leftLeg, glm::vec3(1.0, 1.0, 1.0));
     m_shader->setUniform("model", leftLeg, false);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);  // Draw left leg
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
     // Draw the right leg
-    float rightSwingAngle = maxAngle * glm::sin(timeValue *  speed + glm::pi<float>()); // Out of phase with left leg
-    glm::quat rightLegRotation = glm::angleAxis(glm::radians(rightSwingAngle), glm::vec3(1, 0, 0.5));
+    float rightSwingAngle = maxAngle * glm::sin(timeValue *  speed + glm::pi<float>()); // opposite of left leg swing
+    glm::mat4 rightLeg = torso; // attatch leg to torso
+    glm::quat rightLegRotation = glm::angleAxis(glm::radians(rightSwingAngle), glm::vec3(1, 0, 0));
     rightLegTransform.rotateAroundPoint(rightHip, rightLegRotation);
-    glm::mat4 rightLeg = rightLegTransform.getMatrix();
-    rightLeg = rightLeg * rotateAroundPivot;
+    rightLeg = rightLeg * rightLegTransform.getMatrix();
+    rightLeg = glm::scale(rightLeg, glm::vec3(1.0, 1.0, 1.0));
     m_shader->setUniform("model", rightLeg, false);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);  // Draw right leg
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
 
     glEnable(GL_CULL_FACE);

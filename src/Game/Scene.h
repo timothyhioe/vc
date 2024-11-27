@@ -53,14 +53,14 @@ private:
     Transform leftLegTransform;
     Transform leftHipTransform;
 
-    glm::vec3 leftShoulder = glm::vec3(-1.0f, 0.7f, -0.3f);
-    glm::vec3 rightShoulder = glm::vec3(0.8f, 0.6f, 0.3f);
+    glm::vec3 leftShoulder = glm::vec3(-1.0f, 0.4f, 0.2f);
+    glm::vec3 rightShoulder = glm::vec3(1.0f, 0.4f, 0.2f);
 
-    glm::vec3 leftElbow = glm::vec3(-1.0f, 0.1f, -0.1f);
-    glm::vec3 rightElbow = glm::vec3(0.8f, 0.3f, 0.3f);
+    glm::vec3 leftElbow = glm::vec3(-1.0f, 0.1f, 0.2f);
+    glm::vec3 rightElbow = glm::vec3(1.0f, 0.1f, 0.2f);
 
-    glm::vec3 leftHip = glm::vec3(-0.4, -1.2, 0.0);
-    glm::vec3 rightHip = glm::vec3(0.4f, -1.2f, 0.0f);
+    glm::vec3 leftHip = glm::vec3(-0.1, -0.5, 0.0);
+    glm::vec3 rightHip = glm::vec3(0.1f, -0.5f, 0.0);
 
 
 
