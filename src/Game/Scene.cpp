@@ -56,7 +56,7 @@ bool Scene::init()
 
         //aufgabe 2.2
 //        cubeTrans.setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-//        cubeTrans.setScale(glm::vec3(1.0f));
+//        cubeTrans.setScale(glm::vec3(1.0, 1.0, 1.0));
 
         //aufgabe 2.3
         //initialize body parts position and scale
@@ -75,7 +75,7 @@ bool Scene::init()
 
         // lower left arm
         lowerLeftArmTransform.setPosition(glm::vec3(0.0f, -1.1f, 0.2f)); // position lower left arm
-        lowerLeftArmTransform.setScale(glm::vec3(0.2f, 0.5f, 0.2f));
+        lowerLeftArmTransform.setScale(glm::vec3(0.2f, 0.5f, 0.15f));
 
         // upper right arm
         upperRightArmTransform.setPosition(glm::vec3(0.7f, 0.25f, 0.2f));
@@ -100,7 +100,9 @@ bool Scene::init()
         glFrontFace(GL_CCW);
         glCullFace(GL_BACK);
 
-
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+        glClearDepth(1.0f);
 
 
         cout << "Scene initialization done\n";
@@ -158,15 +160,19 @@ void Scene::render(float dt)
     //animation
     float timeValue = glfwGetTime();
     float speed = 3.5f;
-    float maxAngle = 0.4f;         // maximum rotation angle
+    float maxAngle = 0.5f;         // maximum rotation angle
     float swingAngle = maxAngle * glm::sin(timeValue * speed); // animate between -maxAngle and +maxAngle
 
     // rotation for 3d look
-    glm::mat4 rotateAroundPivot = glm::rotate(glm::mat4(1), glm::radians(timeValue * 20.0f), glm::vec3(0, 1, 0));
+    glm::mat4 rotateAroundPivot = glm::rotate(glm::mat4(1), glm::radians(-30.0f), glm::vec3(0, 1, 0));
 
+    float red = (sin(timeValue) + 1.0f) / 2.0f; //  between 0 and 1
+    float green = (sin(timeValue + glm::radians(120.0f)) + 1.0f) / 2.0f; // offset +120 for green
+    float blue = (sin(timeValue + glm::radians(240.0f)) + 1.0f) / 2.0f; //  offset + 240 for blue
 
     // draw the torso
     glm::mat4 torso = torsoTransform.getMatrix() * rotateAroundPivot;
+    m_shader->setUniform("color", glm::vec3(red, green, blue));
     m_shader->setUniform("model", torso , false);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);  // Draw torso
 
@@ -189,11 +195,9 @@ void Scene::render(float dt)
     //draw lower left arm
     float maxLowerAngle = 0.3f;
     float delayFactor = 0.05f;
-    //    float lowerArmSwingAngle = maxLowerAngle * glm::sin((timeValue * speed)  - delayFactor);
     float lowerArmSwingAngle = maxLowerAngle * glm::sin(timeValue * speed + glm::pi<float>() - delayFactor); // add some delay
 
     glm::mat4 lowerLeftArm = upperLeftArm;
-    //    glm::quat lowerArmRotation = glm::angleAxis(glm::radians(lowerArmSwingAngle), glm::vec3(1, 0, 0));
     glm::quat lowerArmRotation = glm::angleAxis(glm::radians(lowerArmSwingAngle), glm::vec3(1, 0, 0.0));
     lowerLeftArmTransform.rotateAroundPoint(leftElbow, lowerArmRotation); // connect to the upper arm swinging animation
     lowerLeftArm = lowerLeftArm * lowerLeftArmTransform.getMatrix();
@@ -213,14 +217,12 @@ void Scene::render(float dt)
 
     //draw lower right arm
 
-    //    float lowerRightSwing = maxLowerAngle * glm::sin(timeValue * speed + glm::pi<float>() - delayFactor);
     float lowerRightSwing = maxLowerAngle * glm::sin((timeValue * speed)  - delayFactor);
     glm::mat4 lowerRightArm = upperRightArm;
-    //    glm::quat lowerRightArmRotation = glm::angleAxis(glm::radians(lowerRightSwing), glm::vec3(1, 0, 0.0));
     glm::quat lowerRightArmRotation = glm::angleAxis(glm::radians(lowerRightSwing), glm::vec3(1, 0, 0));
     lowerRightArmTransform.rotateAroundPoint(rightElbow, lowerRightArmRotation);
     lowerRightArm = lowerRightArm * lowerRightArmTransform.getMatrix();
-    lowerRightArm = glm::scale(lowerRightArm, glm::vec3(5.0, 2.0, 5.0));
+    lowerRightArm = glm::scale(lowerRightArm, glm::vec3(4.0, 2.0, 5.0));
     m_shader->setUniform("model", lowerRightArm, false);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
@@ -245,13 +247,9 @@ void Scene::render(float dt)
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
 
-    glEnable(GL_CULL_FACE);
-    glFrontFace(GL_CCW);
-    glCullFace(GL_BACK);
 
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glClearDepth(1.0f);
+
+
 
     glBindVertexArray(0);
 
