@@ -106,7 +106,7 @@ bool Scene::init()
         rightLegTransform.setScale(glm::vec3(0.45f, 0.45f, 0.2f));
 
         // light source
-        lightSourceTransform.setPosition(glm::vec3(1.0f, 1.0f, 1.0f)); // initialize light source
+        lightSourceTransform.setPosition(glm::vec3(0.0f, 0.0f, 0.0f)); // initialize light source
         lightSourceTransform.setScale(glm::vec3(1.0f, 1.0f, 1.0f));
 
 
@@ -145,14 +145,13 @@ void Scene::render(float dt)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //remove trailing effect from the animation
 
-    // Enable backface culling
-    glEnable(GL_CULL_FACE); // Enable face culling
-    glFrontFace(GL_CCW); // Define front faces as counter-clockwise
-    glCullFace(GL_BACK); // Cull back faces
+    glEnable(GL_CULL_FACE);
+    glFrontFace(GL_CCW);
+    glCullFace(GL_BACK);
 
-    // Enable Depth Test (2.3.3)
+
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS); //Using GL_LESS with glClearDepth(1.0f)
+    glDepthFunc(GL_LESS);
     glClearDepth(1.0f);
 
 
@@ -183,7 +182,7 @@ void Scene::render(float dt)
 
     // draw the torso
     glm::mat4 torso = torsoTransform.getMatrix() * rotateAroundPivot;
-    m_shader->setUniform("color", glm::vec3(red, green, blue));
+    m_shader->setUniform("baseColor", glm::vec3(red, green, blue));
     m_shader->setUniform("model", torso , false);
     m_shader->setUniform("objectType", 0);
     glDrawArrays(GL_TRIANGLES, 0, 36);  // Draw torso
@@ -272,14 +271,14 @@ void Scene::render(float dt)
     float radius = 5.0f;
 
     //Circular rotation
-    float lightSpeed = 2.0f;
+    float lightSpeed = 0.5f;
     float x = radius * glm::cos(timeValue * lightSpeed);
     float z = radius * glm::sin(timeValue * lightSpeed);
-    glm::vec3 animatedPosition = glm::vec3(x, 10.0f, z);
+    glm::vec3 animatedPosition = glm::vec3(x, 5.0f, z);
 //    glm::mat4 lightSource = glm::translate(lightSourceTransform.getMatrix(), lightSourceTransform.getPosition());
     glm::mat4 lightSource = glm::translate(lightSourceTransform.getMatrix(), animatedPosition);
     lightSource = glm::scale(lightSource, glm::vec3(1.0, 1.0, 1.0));
-    glm::vec3 lightColor = glm::vec3 (1.0f, 1.0f, 1.0f);
+    glm::vec3 lightColor = glm::vec3 (1.0f, 1.0f, 0.0f);
 
     m_shader->setUniform("model", lightSource, false);
     m_shader->setUniform("objectType", 1);

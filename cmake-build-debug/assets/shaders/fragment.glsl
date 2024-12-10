@@ -3,6 +3,7 @@
 in vec3 colorVS;
 in vec3 normal, lightDir, viewDir;
 
+uniform vec3 baseColor;
 uniform vec3 lightColor;
 uniform vec3 matSpecular;
 uniform float matShininess;
@@ -17,12 +18,12 @@ void main() {
         vec3 L = normalize(lightDir);
 
         float cosa = max(0.0, dot(N,L));
-        vec3 diffuseTerm = colorVS * lightColor;
+        vec3 diffuseTerm = baseColor * lightColor;
         color = vec4(diffuseTerm * cosa, 1.0);
 
         //ambient ocmponent
         float ambientStrength = 0.2;
-        vec3 ambientColor = colorVS; // this could also be a global ambient color
+        vec3 ambientColor = baseColor; // this could also be a global ambient color
         vec3 ambientTerm = ambientColor * lightColor * ambientStrength;
         color += vec4(ambientTerm, 1.0);
 
