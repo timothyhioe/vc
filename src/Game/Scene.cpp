@@ -175,7 +175,7 @@ void Scene::render(float dt)
     float swingAngle = maxAngle * glm::sin(timeValue * speed); // animate between -maxAngle and +maxAngle
 
     // rotation for 3d look
-    glm::mat4 rotateAroundPivot = glm::rotate(glm::mat4(1), glm::radians(timeValue * 10.0f), glm::vec3(0, 1, 0));
+    glm::mat4 rotateAroundPivot = glm::rotate(glm::mat4(1), glm::radians(-50.0f), glm::vec3(0, 1, 0));
 
     float red = (sin(timeValue) + 1.0f) / 2.0f; //  between 0 and 1
     float green = (sin(timeValue + glm::radians(120.0f)) + 1.0f) / 2.0f; // offset +120 for green
@@ -272,8 +272,9 @@ void Scene::render(float dt)
     float radius = 5.0f;
 
     //Circular rotation
-    float x = radius * glm::cos(timeValue * speed);
-    float z = radius * glm::sin(timeValue * speed);
+    float lightSpeed = 2.0f;
+    float x = radius * glm::cos(timeValue * lightSpeed);
+    float z = radius * glm::sin(timeValue * lightSpeed);
     glm::vec3 animatedPosition = glm::vec3(x, 10.0f, z);
 //    glm::mat4 lightSource = glm::translate(lightSourceTransform.getMatrix(), lightSourceTransform.getPosition());
     glm::mat4 lightSource = glm::translate(lightSourceTransform.getMatrix(), animatedPosition);
