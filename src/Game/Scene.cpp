@@ -2,6 +2,7 @@
 #include <AssetManager.h>
 #include <iostream>
 #include "Cube.h"
+#include "CubeWithNormals.h"
 
 using namespace std;
 
@@ -33,30 +34,41 @@ bool Scene::init()
         //generate and activate vbo
         glGenBuffers(1, &vboID); //vbo ID generieren
         glBindBuffer(GL_ARRAY_BUFFER, vboID); //korrekter vbo Buffer aktivieren
-        glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVert), &cubeVert, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertWithNormals), &cubeVertWithNormals, GL_STATIC_DRAW);
 
         //generate and activate vao
         glGenVertexArrays(1, &vaoID); //vao ID generieren
         glBindVertexArray(vaoID);
 
         //describe vbo in the vao
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr); // Position, 5 floats(2 for position and 3 for color)
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), nullptr); // Position
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 3, GL_FLOAT, false, 6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float))); //color, 2 as the offset
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float))); // normals
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float))); // Colors
+        glEnableVertexAttribArray(2);
+
+        // GENERATE LIGHT SOURCE
+        glGenBuffers(1, &lightVboID); // generate and activate VBO and upload data
+        glBindBuffer(GL_ARRAY_BUFFER, lightVboID); //binding
+        glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVert), cubeVert, GL_STATIC_DRAW);
+
+        // generate and activate VAO
+        glGenVertexArrays(1, &lightVaoID); // generate ID
+        glBindVertexArray(lightVaoID); //binding
+
+        // describe VBO in the VAO
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
         glEnableVertexAttribArray(1);
 
-        //generate and bin ibo
-        GLuint iboID;
-        glGenBuffers(1, &iboID);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboID);
+        // IBO
+        glGenBuffers(1, &lightIboID);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lightIboID);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeInd), cubeInd, GL_STATIC_DRAW);
 
-        //unbind vao
-        glBindVertexArray(0);
-
-        //aufgabe 2.2
-//        cubeTrans.setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-//        cubeTrans.setScale(glm::vec3(1.0, 1.0, 1.0));
 
         //aufgabe 2.3
         //initialize body parts position and scale
@@ -93,12 +105,14 @@ bool Scene::init()
         rightLegTransform.setPosition(glm::vec3(0.3f, -0.8f, 0.0f));
         rightLegTransform.setScale(glm::vec3(0.45f, 0.45f, 0.2f));
 
+        // light source
+        lightSourceTransform.setPosition(glm::vec3(1.0f, 1.0f, 1.0f)); // initialize light source
+        lightSourceTransform.setScale(glm::vec3(1.0f, 1.0f, 1.0f));
 
 
-
-        glEnable(GL_CULL_FACE);
-        glFrontFace(GL_CCW);
-        glCullFace(GL_BACK);
+        glBindVertexArray(0); //Unbind VAO
+        glBindBuffer(GL_ARRAY_BUFFER, 0); //Unbind VBO
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); //Unbind EBO
 
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
@@ -128,29 +142,26 @@ void Scene::render(float dt)
 
     glBindVertexArray(vaoID);
 
-
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //remove trailing effect from the animation
 
-    //aufgabe 2.2
+    // Enable backface culling
+    glEnable(GL_CULL_FACE); // Enable face culling
+    glFrontFace(GL_CCW); // Define front faces as counter-clockwise
+    glCullFace(GL_BACK); // Cull back faces
 
-//    cubeTrans.rotate(glm::vec3(0.0f, dt, 0.0f)); // Rotate around Y-axis
-//    cubeTrans.rotate(glm::vec3(dt, 0.0f, 0.0f)); // Rotate around X-axis
-
-//    m_shader->setUniform("model", cubeTrans.getMatrix(), false);
-
-
-    //glBindVertexArray(vaoID);
-
-    //glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr); // cube has 36 indices
-
-
+    // Enable Depth Test (2.3.3)
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS); //Using GL_LESS with glClearDepth(1.0f)
+    glClearDepth(1.0f);
 
 
     //aufgabe 2.3
 
     // setup view and projection matrices
-    glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -5.0f)); // Position the camera
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f); // Perspective projection
+    float aspectRatio = static_cast<float>(m_window->getWindowHeight()) / static_cast<float>(m_window->getWindowWidth()); // Height / width so that it don't appear stretched
+    glm::mat4 view = glm::lookAt(cameraPosition, cameraTarget, upVector);// Position the camera
+    glm::mat4 projection = glm::perspective(glm::radians(90.0f), aspectRatio, 0.1f, 100.0f); // Perspective projection
 
     // Pass the matrices to the shader
     m_shader->setUniform("view", view, false);
@@ -159,12 +170,12 @@ void Scene::render(float dt)
 
     //animation
     float timeValue = glfwGetTime();
-    float speed = 3.5f;
+    float speed = 3.0f;
     float maxAngle = 0.5f;         // maximum rotation angle
     float swingAngle = maxAngle * glm::sin(timeValue * speed); // animate between -maxAngle and +maxAngle
 
     // rotation for 3d look
-    glm::mat4 rotateAroundPivot = glm::rotate(glm::mat4(1), glm::radians(-30.0f), glm::vec3(0, 1, 0));
+    glm::mat4 rotateAroundPivot = glm::rotate(glm::mat4(1), glm::radians(timeValue * 10.0f), glm::vec3(0, 1, 0));
 
     float red = (sin(timeValue) + 1.0f) / 2.0f; //  between 0 and 1
     float green = (sin(timeValue + glm::radians(120.0f)) + 1.0f) / 2.0f; // offset +120 for green
@@ -174,13 +185,15 @@ void Scene::render(float dt)
     glm::mat4 torso = torsoTransform.getMatrix() * rotateAroundPivot;
     m_shader->setUniform("color", glm::vec3(red, green, blue));
     m_shader->setUniform("model", torso , false);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);  // Draw torso
+    m_shader->setUniform("objectType", 0);
+    glDrawArrays(GL_TRIANGLES, 0, 36);  // Draw torso
 
     // draw the head
     glm::mat4 head = headTransform.getMatrix() * torso; //connect head to torso
     head = glm::scale(head, glm::vec3(1.2, 0.5, 1.0));
     m_shader->setUniform("model", head, false);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);  // Draw head
+    m_shader->setUniform("objectType", 0);
+    glDrawArrays(GL_TRIANGLES, 0, 36);  // Draw head
 
     // draw upper left arm
     float armSwingAngle = maxAngle * glm::sin(timeValue * speed + glm::pi<float>()); // opposite of legs
@@ -190,7 +203,8 @@ void Scene::render(float dt)
     upperLeftArm = upperLeftArm * upperLeftArmTransform.getMatrix();
     upperLeftArm = glm::scale(upperLeftArm, glm::vec3(10.0, 2.0, 3.0));
     m_shader->setUniform("model", upperLeftArm, false);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    m_shader->setUniform("objectType", 0);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     //draw lower left arm
     float maxLowerAngle = 0.3f;
@@ -203,7 +217,8 @@ void Scene::render(float dt)
     lowerLeftArm = lowerLeftArm * lowerLeftArmTransform.getMatrix();
     lowerLeftArm = glm::scale(lowerLeftArm, glm::vec3(5.0, 2.0, 5.0));
     m_shader->setUniform("model", lowerLeftArm, false);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    m_shader->setUniform("objectType", 0);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     // draw upper right arm
     float rightArmSwing = maxAngle * glm::sin((timeValue * speed) - delayFactor);
@@ -213,7 +228,8 @@ void Scene::render(float dt)
     upperRightArm = upperRightArm * upperRightArmTransform.getMatrix();
     upperRightArm = glm::scale(upperRightArm, glm::vec3(10.0, 2.0, 3.0));
     m_shader->setUniform("model", upperRightArm, false);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    m_shader->setUniform("objectType", 0);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     //draw lower right arm
 
@@ -224,7 +240,8 @@ void Scene::render(float dt)
     lowerRightArm = lowerRightArm * lowerRightArmTransform.getMatrix();
     lowerRightArm = glm::scale(lowerRightArm, glm::vec3(4.0, 2.0, 5.0));
     m_shader->setUniform("model", lowerRightArm, false);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    m_shader->setUniform("objectType", 0);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
     // Draw the left leg
@@ -234,7 +251,8 @@ void Scene::render(float dt)
     leftLeg = leftLeg * leftLegTransform.getMatrix(); // Recalculate the final transformation
     leftLeg = glm::scale(leftLeg, glm::vec3(1.0, 1.0, 1.0));
     m_shader->setUniform("model", leftLeg, false);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    m_shader->setUniform("objectType", 0);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     // Draw the right leg
     float rightSwingAngle = maxAngle * glm::sin(timeValue *  speed + glm::pi<float>()); // opposite of left leg swing
@@ -244,9 +262,31 @@ void Scene::render(float dt)
     rightLeg = rightLeg * rightLegTransform.getMatrix();
     rightLeg = glm::scale(rightLeg, glm::vec3(1.0, 1.0, 1.0));
     m_shader->setUniform("model", rightLeg, false);
+    m_shader->setUniform("objectType", 0);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+    // draw lightsource
+    glBindVertexArray(lightVaoID);
+
+    float radius = 5.0f;
+
+    //Circular rotation
+    float x = radius * glm::cos(timeValue * speed);
+    float z = radius * glm::sin(timeValue * speed);
+    glm::vec3 animatedPosition = glm::vec3(x, 10.0f, z);
+//    glm::mat4 lightSource = glm::translate(lightSourceTransform.getMatrix(), lightSourceTransform.getPosition());
+    glm::mat4 lightSource = glm::translate(lightSourceTransform.getMatrix(), animatedPosition);
+    lightSource = glm::scale(lightSource, glm::vec3(1.0, 1.0, 1.0));
+    glm::vec3 lightColor = glm::vec3 (1.0f, 1.0f, 1.0f);
+
+    m_shader->setUniform("model", lightSource, false);
+    m_shader->setUniform("objectType", 1);
+    m_shader->setUniform("lightPos", animatedPosition);
+//    m_shader->setUniform("lightPos", lightSourceTransform.getPosition());
+    m_shader->setUniform("lightColor", lightColor);
+
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-
-
 
 
 

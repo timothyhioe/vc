@@ -62,6 +62,14 @@ private:
     glm::vec3 leftHip = glm::vec3(-0.1, -0.5, 0.0);
     glm::vec3 rightHip = glm::vec3(0.1f, -0.5f, 0.0);
 
+    glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 5.0f); // Position of the camera
+    glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);   // Point the camera is looking at
+    glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);       // Up direction
+
+
+    Transform lightSourceTransform;
+
+    GLuint lightVaoID, lightVboID, lightIboID;
 
 
 };
