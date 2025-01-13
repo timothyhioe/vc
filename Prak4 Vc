@@ -1,0 +1,144 @@
+
+import cv2
+import numpy as np
+
+#1. "yoshi.png" laden
+
+img = cv2.imread("yoshi.png")
+
+#2. Breite, Hohe und Anzahl der Farbknaele ausgeben
+height,width,channels = img.shape
+print(f"Breite:{width}, Höhe:{height}, Farbkanäle:{channels}")
+
+#3.Bilddatenformat auf Fliesskomma ändern
+img_float =img.astype(np.float32) / 255.0
+print("Umwandlung yu float 32")
+
+#4 Bild  original anzeigen und float 32
+cv2.imshow("img original", img)
+cv2.waitKey(0)
+
+cv2.imshow("img float als 32", img_float)
+cv2.waitKey(0)
+
+#5 ein 10x10 quadrad in der mittel einzeichnen
+center_x, center_y = width // 2, height // 2
+top_left = (center_x - 5, center_y - 5) #verschieben mitte des Quadrad um 5 pixel nach oben und links
+bottom_right = (center_x + 5, center_y + 5) #nach unten und rechts
+dot_img = img.copy()
+cv2.rectangle(dot_img, top_left, bottom_right, (0, 0, 255), -1)  # steht fur Rot,Füllt das Rechteck vollständig aus. (Ein positiver Wert würde die Dicke der Rechtecklinien angeben, ohne es auszufüllen.)
+print(" reckteck schon abgebildet.")
+
+cv2.imshow("Image mit Red Square", dot_img)
+cv2.waitKey(0)
+
+# 6. Thay thế mỗi dòng thứ 5 bằng màu đen
+for i in range(0, height, 5):
+    img[i, :] = (0, 0, 0)  # Đặt toàn bộ dòng thứ 5 thành màu đen
+print(" Các dòng thứ 5 đã được thay thế bằng màu đen.")
+
+cv2.imshow("Image mit Black Lines", img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+# 7. Lưu hình ảnh đã chỉnh sửa
+cv2.imwrite("NewYoshi.png", img)
+print(" Hình ảnh đã được lưu với tên 'NewYoshi.png'.")
+
+#4.3 : Farbe
+img = cv2.imread('yoshi.png', cv2.IMREAD_COLOR)
+mask = cv2.imread('mask.png', cv2.IMREAD_GRAYSCALE)
+
+if mask.shape != img[:, :, 0].shape:
+    mask = cv2.resize(mask, (img.shape[1], img.shape[0]))
+    print("️ Mask đã được thay đổi kích thước để phù hợp với hình ảnh Yoshi.")
+
+# 9. hsv ubertragen
+img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+print(" bild ist schon nach hsv ubertragt.")
+
+#H-wert fuer weisse Pixel in der Maske ändern
+white_pixels = (mask == 255)
+img_hsv[:, :, 0][white_pixels] = 122
+print("H-wert fuer weisse Pixel")
+
+# 11. Chuyển đổi HSV trở lại BGR
+img_result = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
+print(" Bgr umwaldeln")
+
+# 12. Hiển thị hình ảnh kết quả
+cv2.imshow("Modified Image", img_result)
+cv2.waitKey(0)
+# 13.Hue handmade gemacht
+img_hsv[:, :, 0][white_pixels] = 0#im hsv farbraum entspricht ein H-wert von 0 der farbe rot
+img_result = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR) #konvrtiert das hsv-bild yuruck in BGR
+def update_hue(value): #der Trackbar- wert geändert
+    img_hsv[:, :, 0][white_pixels] = value #neuen Wert aufgesezt
+    img_updated = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR) #bgr konvertiert
+    cv2.imshow("Adjusted Image", img_updated)
+
+cv2.imshow("Adjusted Image", img_result) #bei dem Hwert =0
+cv2.createTrackbar("Hue", "Adjusted Image", 0, 180, update_hue)
+cv2.waitKey(0) #start wert 0 bis 180, Call_back funktion
+
+# 14. Lưu hình ảnh kết quả
+cv2.imwrite("Yoshi_HSV_Modified.png", img_result)
+print(" Hình ảnh đã được lưu với tên 'Yoshi_HSV_Modified.png'.")
+
+# 15. Đóng tất cả cửa sổ OpenCV
+cv2.destroyAllWindows()
+
+#4.4
+# 1. Đọc hai hình ảnh source và Target
+source_img = cv2.imread('FigSource.png')
+target_img = cv2.imread('FigTarget.png')
+
+if source_img is None or target_img is None:
+    raise FileNotFoundError("Lỗi: Không thể đọc 'FigSource.png' hoặc 'FigTarget.png'.")
+
+# 2. Chuyển hình ảnh sang float32 và chuẩn hóa giá trị về [0,1]
+source_img = source_img.astype(np.float32) / 255.0
+target_img = target_img.astype(np.float32) / 255.0
+print(" Cả hai hình ảnh đã được chuyển sang float32 và chuẩn hóa.")
+
+# 3. Chuyển đổi cả hai hình ảnh sang không gian màu Lab
+source_lab = cv2.cvtColor(source_img, cv2.COLOR_BGR2Lab)
+target_lab = cv2.cvtColor(target_img, cv2.COLOR_BGR2Lab)
+print(" Hình ảnh đã được chuyển sang không gian màu Lab.")
+
+# 4. Hàm tính toán trung bình và độ lệch chuẩn cho mỗi kênh màu
+def compute_mean_std(image):
+    mean, std = cv2.meanStdDev(image)
+    return mean.flatten(), std.flatten()
+
+# 5. Tính toán trung bình và độ lệch chuẩn
+source_mean, source_std = compute_mean_std(source_lab)
+target_mean, target_std = compute_mean_std(target_lab)
+print(" Trung bình và độ lệch chuẩn đã được tính toán cho mỗi kênh.")
+
+# 6. Áp dụng Color Transfer trên từng kênh Lab
+for i in range(3):
+    source_lab[:, :, i] -= source_mean[i]  # Trừ trung bình source
+    source_lab[:, :, i] /= source_std[i]  # Chia cho độ lệch chuẩn source
+    source_lab[:, :, i] *= target_std[i]  # Nhân với độ lệch chuẩn Target
+    source_lab[:, :, i] += target_mean[i]  # Cộng với trung bình Target
+
+print(" Color Transfer đã được áp dụng thành công.")
+
+# 7. Chuyển đổi hình ảnh trở lại không gian màu BGR
+result_img = cv2.cvtColor(source_lab, cv2.COLOR_Lab2BGR)
+#result_img = np.clip(result_img, 0, 1)  # Đảm bảo giá trị nằm trong khoảng [0,1]
+result_img = (result_img * 255).astype(np.uint8)
+
+# 8. Hiển thị kết quả
+cv2.imshow("Source Image", (source_img * 255).astype(np.uint8))
+cv2.imshow("Target Image", (target_img * 255).astype(np.uint8))
+cv2.imshow("Result Image", result_img)
+cv2.waitKey(0)
+
+# 9. Lưu kết quả
+cv2.imwrite('Reinhard_Color_Transfer_Result.png', result_img)
+print(" Hình ảnh kết quả đã được lưu với tên 'Reinhard_Color_Transfer_Result.png'.")
+
+# 10. Đóng tất cả cửa sổ OpenCV
+cv2.destroyAllWindows()
